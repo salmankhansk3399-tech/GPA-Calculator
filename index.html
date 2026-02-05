@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+            transform: rotate(30deg);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .results-section {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;  
+        }
+        .semester-section {
+            flex: 2;
+            min-width: 300px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .semester-section:hover, .results-section:hover {
+            transform: translateY(-5px);
+        }
+        
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eee;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2 i {
+            margin-right: 10px;
+            color: #6a11cb;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+            outline: none;
+        }
+        
+        button {
+            padding: 14px 22px;
+            background: #2575fc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button i {
+            align-content: center;
+        }
+        
+        button:hover {
+            background: #e60606;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .course-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .course-table th, .course-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .course-table th {
+            background: #6a11cb;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .course-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .course-table tr:hover {
+            background-color: #f8faff;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 150px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-add {
+            background: #28a745;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+        }
+        
+        .btn-calculate {
+            background: #17a2b8;
+        }
+        
+        .btn-calculate:hover {
+            background: #138496;
+        }
+        
+        .btn-save {
+            background: #6c757d;
+        }
+        
+        .btn-save:hover {
+            background: #5a6268;
+        }
+        
+        .btn-reset {
+            background: #dc3545;
+        }
+        
+        .btn-reset:hover {
+            background: #c82333;
+        }
+        
+        .btn-download {
+            background: #6a11cb;
+        }
+        
+        .btn-download:hover {
+            background: #580db8;
+        }
+        .results-section {
+            width: 30%;
+        }
+        .results-card {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            height: 32%;
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .results-card::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 100px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .results-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: -30px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .gpa-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .division {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .semester-list {
+            margin-top: 30px;
+        }
+        
+        .semester-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+        }
+        
+        .semester-item:hover {
+            transform: translateY(-3px);
+        }
+        
+        .semester-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #6c757d;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .input-toggle {
+            display: flex;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .toggle-option {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .toggle-option.active {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+        
+        .direct-input {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .direct-input.active {
+            display: block;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .action-buttons, .download-buttons {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> GPA Calculator</h1>
+            <p class="description">Calculate your semester GPA and overall CGPA with this easy-to-use calculator. Add courses or directly input semester GPA.</p>
+        </header>
+        
+        <div class="main-content">
+            <section class="semester-section">
+                <h2><i class="fas fa-book"></i> Values</h2>
+                
+                <div class="form-group">
+                    <label for="semester-name"><i class="fas fa-pencil-alt"></i> Semester Name</label>
+                    <input type="text" id="semester-name" placeholder="e.g., Fall 2023">
+                </div>
+                
+                <div class="input-toggle">
+                    <div class="toggle-option active" id="toggle-courses"><i class="fas fa-list"></i> Course-wise Input</div>
+                    <div class="toggle-option" id="toggle-direct"><i class="fas fa-tachometer-alt"></i> Direct GPA Input</div>
+                </div>
+                
+                <div id="courses-input">
+                    <h3><i class="fas fa-graduation-cap"></i> Courses</h3>
+                    <table class="course-table">
+                        <thead>
+                            <tr>
+                                <th>Course Name</th>
+                                <th>Marks</th>
+                                <th>Credit Hours</th>
+                                <th>GPA Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courses-container">
+                            <!-- Course rows will be added here dynamically -->
+                        </tbody>
+                    </table>
+                    
+                    <button id="add-course" class="btn-add"><i class="fas fa-plus"></i> Add Course</button>
+                </div>
+                
+                <div id="direct-input" class="direct-input">
+                    <div class="form-group">
+                        <label for="direct-gpa"><i class="fas fa-star"></i> Semester GPA</label>
+                        <input type="number" id="direct-gpa" min="0" max="4" step="0.01" placeholder="0.0 - 4.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="direct-credits"><i class="fas fa-clock"></i> Total Credit Hours</label>
+                        <input type="number" id="direct-credits" min="0" step="0.5" placeholder="Total credits">
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="calculate-gpa" class="btn-calculate"><i class="fas fa-calculator"></i>  Calculate GPA</button>
+                    <button id="save-semester" class="btn-save"><i class="fas fa-save"></i>  Save Semester</button>
+                    <button id="reset" class="btn-reset"><i class="fas fa-redo"></i>  Reset</button>
+                </div>
+            </section>
+            <section class="results-section">
+                <h2><i class="fas fa-chart-line"></i> Results</h2>
+                <div class="results-card" id="results-card">
+                    <h3>Current Semester GPA</h3>
+                    <div id="gpa-result" class="gpa-value">-</div>
+                    <div id="division" class="division">-</div>
+                    <p>Total Credit Hours: <span id="total-ch">0</span></p>
+                </div>
+                <div class="results-card" id="cgpa-card">
+                    <h3>Overall CGPA</h3>
+                    <div id="cgpa-result" class="gpa-value">-</div>
+                    <div id="cgpa-division" class="division">-</div>
+                    <p>Total Credit Hours: <span id="total-cgpa-ch">0</span></p>
+                </div>
+                <div class="download-buttons">
+                    <button id="save-image" class="btn-download"><i class="fas fa-download"></i> Save as Image</button>
+                    <button id="save-pdf" class="btn-download"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+                </div>
+                <div class="semester-list">
+                    <h3><i class="fas fa-history"></i> Saved Semesters</h3>
+                    <div id="semesters-container">
+                        <!-- Saved semesters will be displayed here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+        <footer>
+            <p>GPA Calculator © 2026 | Created by Salman Khan</p>
+        </footer>
+    </div>
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Download completed successfully!</span>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const coursesContainer = document.getElementById('courses-container');
+            const addCourseBtn = document.getElementById('add-course');
+            const calculateGpaBtn = document.getElementById('calculate-gpa');
+            const saveSemesterBtn = document.getElementById('save-semester');
+            const resetBtn = document.getElementById('reset');
+            const gpaResult = document.getElementById('gpa-result');
+            const divisionElement = document.getElementById('division');
+            const totalChElement = document.getElementById('total-ch');
+            const cgpaResult = document.getElementById('cgpa-result');
+            const cgpaDivisionElement = document.getElementById('cgpa-division');
+            const totalCgpaChElement = document.getElementById('total-cgpa-ch');
+            const semestersContainer = document.getElementById('semesters-container');
+            const semesterNameInput = document.getElementById('semester-name');
+            const toggleCourses = document.getElementById('toggle-courses');
+            const toggleDirect = document.getElementById('toggle-direct');
+            const coursesInput = document.getElementById('courses-input');
+            const directInput = document.getElementById('direct-input');
+            const directGpaInput = document.getElementById('direct-gpa');
+            const directCreditsInput = document.getElementById('direct-credits');
+            const saveImageBtn = document.getElementById('save-image');
+            const savePdfBtn = document.getElementById('save-pdf');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            // Store saved semesters
+            let semesters = [];
+            let inputMode = 'courses'; // 'courses' or 'direct'
+            // Add initial course row
+            addCourseRow();
+            // Event listeners
+            addCourseBtn.addEventListener('click', addCourseRow);
+            calculateGpaBtn.addEventListener('click', calculateGPA);
+            saveSemesterBtn.addEventListener('click', saveSemester);
+            resetBtn.addEventListener('click', resetCurrentSemester);
+            saveImageBtn.addEventListener('click', saveAsImage);
+            savePdfBtn.addEventListener('click', saveAsPDF);
+            // Toggle input mode
+            toggleCourses.addEventListener('click', function() {
+                if (inputMode !== 'courses') {
+                    inputMode = 'courses';
+                    toggleCourses.classList.add('active');
+                    toggleDirect.classList.remove('active');
+                    coursesInput.style.display = 'block';
+                    directInput.classList.remove('active');
+                }
+            });
+            toggleDirect.addEventListener('click', function() {
+                if (inputMode !== 'direct') {
+                    inputMode = 'direct';
+                    toggleDirect.classList.add('active');
+                    toggleCourses.classList.remove('active');
+                    coursesInput.style.display = 'none';
+                    directInput.classList.add('active');
+                }
+            });
+            // Function to add a new course row
+            function addCourseRow() {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" class="course-name" placeholder="e.g., Microeconomics"></td>
+                    <td><input type="number" class="marks" min="0" max="100" placeholder="0-100"></td>
+                    <td><input type="number" class="credit-hours" min="1" max="10" step="1" placeholder="3"></td>
+                    <td class="gpa-value">-</td>
+                    <td><button class="delete-course"><i class="fas fa-trash"></i></button></td>
+                `;
+                coursesContainer.appendChild(row);
+                // Add event listener to the delete button
+                row.querySelector('.delete-course').addEventListener('click', function() {
+                    row.remove();
+                });
+                // Add event listeners to marks input for automatic GPA calculation
+                const marksInput = row.querySelector('.marks');
+                const creditHoursInput = row.querySelector('.credit-hours');
+                marksInput.addEventListener('input', updateGPAValue);
+                creditHoursInput.addEventListener('input', updateGPAValue);
+                function updateGPAValue() {
+                    const marks = parseFloat(marksInput.value) || 0;
+                    const gpaValueCell = row.querySelector('.gpa-value');
+                    gpaValueCell.textContent = calculateGPAFromMarks(marks).toFixed(1);
+                }
+            }
+
+            // Function to calculate GPA from marks based on the provided criteria
+            function calculateGPAFromMarks(marks) {
+                if (marks >= 85) return 4.0;
+                if (marks === 84) return 3.9;
+                if (marks === 83) return 3.8;
+                if (marks === 82) return 3.7;
+                if (marks === 81) return 3.6;
+                if (marks === 80) return 3.5;
+                if (marks === 79) return 3.4;
+                if (marks === 78) return 3.3;
+                if (marks === 77) return 3.2;
+                if (marks === 76) return 3.1;
+                if (marks === 75) return 3.0;
+                if (marks === 74) return 2.9;
+                if (marks === 73) return 2.8;
+                if (marks === 72) return 2.7;
+                if (marks === 71) return 2.6;
+                if (marks === 70) return 2.5;
+                if (marks === 69) return 2.4;
+                if (marks === 68) return 2.3;
+                if (marks === 67) return 2.2;
+                if (marks === 66) return 2.1;
+                if (marks === 65) return 2.0;
+                if (marks === 64) return 1.9;
+                if (marks === 63) return 1.8;
+                if (marks === 62) return 1.7;
+                if (marks === 61) return 1.6;
+                if (marks === 60) return 1.5;
+                if (marks === 59) return 1.4;
+                if (marks === 58) return 1.3;
+                if (marks === 57) return 1.2;
+                if (marks === 56) return 1.1;
+                if (marks === 55) return 1.0;
+                if (marks === 54) return 0.9;
+                if (marks === 53) return 0.8;
+                if (marks === 52) return 0.7;
+                if (marks === 51) return 0.6;
+                if (marks === 50) return 0.5;
+                return 0.0;
+            }
+            
+            // Function to calculate GPA for the current semester
+            function calculateGPA() {
+                if (inputMode === 'courses') {
+                    calculateGPAFromCourses();
+                } else {
+                    calculateGPAFromDirectInput();
+                }
+            }
+            function calculateGPAFromCourses() {
+                const courses = [];
+                let totalGP = 0;
+                let totalCH = 0;
+                const rows = coursesContainer.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const marksInput = row.querySelector('.marks');
+                    const creditHoursInput = row.querySelector('.credit-hours');
+                    const gpaValueCell = row.querySelector('.gpa-value');
+                    const marks = parseFloat(marksInput.value) || 0;
+                    const creditHours = parseFloat(creditHoursInput.value) || 0;
+                    if (marks > 0 && creditHours > 0) {
+                        const gpaValue = calculateGPAFromMarks(marks);
+                        const gp = gpaValue * creditHours;
+                        totalGP += gp;
+                        totalCH += creditHours;
+                        gpaValueCell.textContent = gpaValue.toFixed(1);
+                        courses.push({
+                            name: row.querySelector('.course-name').value || 'Unnamed Course',
+                            marks: marks,
+                            creditHours: creditHours,
+                            gpaValue: gpaValue
+                        });
+                    }
+                });
+                if (totalCH > 0) {
+                    const gpa = totalGP / totalCH;
+                    displayGPAResult(gpa, totalCH);
+                } else {
+                    displayGPAResult(null, 0);
+                }
+                calculateCGPA();
+            }
+            
+            function calculateGPAFromDirectInput() {
+                const gpa = parseFloat(directGpaInput.value) || 0;
+                const creditHours = parseFloat(directCreditsInput.value) || 0;
+                
+                if (gpa > 0 && creditHours > 0) {
+                    displayGPAResult(gpa, creditHours);
+                } else {
+                    displayGPAResult(null, 0);
+                }
+                
+                calculateCGPA();
+            }
+            
+            function displayGPAResult(gpa, totalCH) {
+                if (gpa !== null) {
+                    gpaResult.textContent = gpa.toFixed(2);
+                    totalChElement.textContent = totalCH.toFixed(1);
+                    
+                    // Determine division
+                    if (gpa >= 3.0) {
+                        divisionElement.textContent = 'First Division';
+                        divisionElement.style.color = '#28a745';
+                    } else if (gpa >= 2.5) {
+                        divisionElement.textContent = 'Second Division';
+                        divisionElement.style.color = '#ffc107';
+                    } else if (gpa >= 2.0) {
+                        divisionElement.textContent = 'Third Division';
+                        divisionElement.style.color = '#fd7e14';
+                    } else {
+                        divisionElement.textContent = 'Fail';
+                        divisionElement.style.color = '#dc3545';
+                    }
+                } else {
+                    gpaResult.textContent = '-';
+                    divisionElement.textContent = '-';
+                    totalChElement.textContent = '0';
+                }
+            }
+            
+            // Function to save the current semester
+            function saveSemester() {
+                const semesterName = semesterNameInput.value || `Semester ${semesters.length + 1}`;
+                
+                if (inputMode === 'courses') {
+                    saveSemesterFromCourses(semesterName);
+                } else {
+                    saveSemesterFromDirectInput(semesterName);
+                }
+            }
+            
+            function saveSemesterFromCourses(semesterName) {
+                const courses = [];
+                let totalGP = 0;
+                let totalCH = 0;
+                
+                const rows = coursesContainer.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const marksInput = row.querySelector('.marks');
+                    const creditHoursInput = row.querySelector('.credit-hours');
+                    
+                    const marks = parseFloat(marksInput.value) || 0;
+                    const creditHours = parseFloat(creditHoursInput.value) || 0;
+                    
+                    if (marks > 0 && creditHours > 0) {
+                        const gpaValue = calculateGPAFromMarks(marks);
+                        const gp = gpaValue * creditHours;
+                        
+                        totalGP += gp;
+                        totalCH += creditHours;
+                        
+                        courses.push({
+                            name: row.querySelector('.course-name').value || 'Unnamed Course',
+                            marks: marks,
+                            creditHours: creditHours,
+                            gpaValue: gpaValue
+                        });
+                    }
+                });
+                
+                if (courses.length === 0) {
+                    showToast('Please add at least one course with valid marks and credit hours.');
+                    return;
+                }
+                
+                const gpa = totalGP / totalCH;
+                
+                const semester = {
+                    name: semesterName,
+                    courses: courses,
+                    gpa: gpa,
+                    totalCH: totalCH,
+                    type: 'courses'
+                };
+                
+                semesters.push(semester);
+                renderSavedSemesters();
+                resetCurrentSemester();
+                calculateCGPA();
+                showToast('Semester saved successfully!');
+            }
+            
+            function saveSemesterFromDirectInput(semesterName) {
+                const gpa = parseFloat(directGpaInput.value) || 0;
+                const creditHours = parseFloat(directCreditsInput.value) || 0;
+                
+                if (gpa <= 0 || creditHours <= 0) {
+                    showToast('Please enter valid GPA and credit hours.');
+                    return;
+                }
+                
+                const semester = {
+                    name: semesterName,
+                    gpa: gpa,
+                    totalCH: creditHours,
+                    type: 'direct'
+                };
+                
+                semesters.push(semester);
+                renderSavedSemesters();
+                resetCurrentSemester();
+                calculateCGPA();
+                showToast('Semester saved successfully!');
+            }
+            
+            // Function to calculate overall CGPA
+            function calculateCGPA() {
+                let totalGP = 0;
+                let totalCH = 0;
+                
+                semesters.forEach(semester => {
+                    if (semester.type === 'courses') {
+                        semester.courses.forEach(course => {
+                            totalGP += course.gpaValue * course.creditHours;
+                            totalCH += course.creditHours;
+                        });
+                    } else {
+                        totalGP += semester.gpa * semester.totalCH;
+                        totalCH += semester.totalCH;
+                    }
+                });
+                
+                if (totalCH > 0) {
+                    const cgpa = totalGP / totalCH;
+                    displayCGPAResult(cgpa, totalCH);
+                } else {
+                    displayCGPAResult(null, 0);
+                }
+            }
+            
+            function displayCGPAResult(cgpa, totalCH) {
+                if (cgpa !== null) {
+                    cgpaResult.textContent = cgpa.toFixed(2);
+                    totalCgpaChElement.textContent = totalCH.toFixed(1);
+                    
+                    // Determine division
+                    if (cgpa >= 3.0) {
+                        cgpaDivisionElement.textContent = 'First Division';
+                        cgpaDivisionElement.style.color = '#28a745';
+                    } else if (cgpa >= 2.5) {
+                        cgpaDivisionElement.textContent = 'Second Division';
+                        cgpaDivisionElement.style.color = '#ffc107';
+                    } else if (cgpa >= 2.0) {
+                        cgpaDivisionElement.textContent = 'Third Division';
+                        cgpaDivisionElement.style.color = '#fd7e14';
+                    } else {
+                        cgpaDivisionElement.textContent = 'Fail';
+                        cgpaDivisionElement.style.color = '#dc3545';
+                    }
+                } else {
+                    cgpaResult.textContent = '-';
+                    cgpaDivisionElement.textContent = '-';
+                    totalCgpaChElement.textContent = '0';
+                }
+            }
+            
+            // Function to render saved semesters
+            function renderSavedSemesters() {
+                semestersContainer.innerHTML = '';
+                
+                if (semesters.length === 0) {
+                    semestersContainer.innerHTML = '<p>No semesters saved yet.</p>';
+                    return;
+                }
+                
+                semesters.forEach((semester, index) => {
+                    const semesterElement = document.createElement('div');
+                    semesterElement.className = 'semester-item';
+                    
+                    let detailsHTML = '';
+                    
+                    if (semester.type === 'courses') {
+                        let coursesHTML = '';
+                        semester.courses.forEach(course => {
+                            coursesHTML += `
+                                <tr>
+                                    <td>${course.name}</td>
+                                    <td>${course.marks}%</td>
+                                    <td>${course.creditHours}</td>
+                                    <td>${course.gpaValue.toFixed(1)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        detailsHTML = `
+                            <table class="course-table">
+                                <thead>
+                                    <tr>
+                                        <th>Course Name</th>
+                                        <th>Marks</th>
+                                        <th>Credit Hours</th>
+                                        <th>GPA Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${coursesHTML}
+                                </tbody>
+                            </table>
+                        `;
+                    } else {
+                        detailsHTML = `<p><strong>Direct Input:</strong> GPA: ${semester.gpa.toFixed(2)}, Credit Hours: ${semester.totalCH}</p>`;
+                    }
+                    
+                    semesterElement.innerHTML = `
+                        <div class="semester-header">
+                            <h4>${semester.name}</h4>
+                            <button class="delete-btn" data-index="${index}"><i class="fas fa-trash"></i> Delete</button>
+                        </div>
+                        ${detailsHTML}
+                        <p><strong>Semester GPA:</strong> ${semester.gpa.toFixed(2)} | <strong>Credit Hours:</strong> ${semester.totalCH}</p>
+                    `;
+                    
+                    semestersContainer.appendChild(semesterElement);
+                });
+                
+                // Add event listeners to delete buttons
+                const deleteButtons = semestersContainer.querySelectorAll('.delete-btn');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        semesters.splice(index, 1);
+                        renderSavedSemesters();
+                        calculateCGPA();
+                        showToast('Semester deleted successfully!');
+                    });
+                });
+            }
+            
+            // Function to reset the current semester
+            function resetCurrentSemester() {
+                coursesContainer.innerHTML = '';
+                semesterNameInput.value = '';
+                directGpaInput.value = '';
+                directCreditsInput.value = '';
+                gpaResult.textContent = '-';
+                divisionElement.textContent = '-';
+                totalChElement.textContent = '0';
+                
+                // Reset to courses input mode
+                inputMode = 'courses';
+                toggleCourses.classList.add('active');
+                toggleDirect.classList.remove('active');
+                coursesInput.style.display = 'block';
+                directInput.classList.remove('active');
+                
+                addCourseRow();
+            }
+            
+            // Function to save results as image
+            function saveAsImage() {
+                const resultsSection = document.querySelector('.results-section');
+                
+                html2canvas(resultsSection).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'gpa-results.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('Image downloaded successfully!');
+                });
+            }
+            
+            // Function to save results as PDF
+            function saveAsPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                const resultsSection = document.querySelector('.results-section');
+                
+                html2canvas(resultsSection).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = doc.internal.pageSize.getWidth();
+                    let imgHeight = canvas.height * imgWidth / canvas.width;
+                    
+                    // Add a page if the content is too long
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    if (imgHeight > pageHeight) {
+                        const ratio = pageHeight / imgHeight;
+                        imgHeight = pageHeight;
+                        imgWidth = imgWidth * ratio;
+                    }
+                    
+                    doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                    doc.save('gpa-results.pdf');
+                    showToast('PDF downloaded successfully!');
+                });
+            }
+            
+            // Function to show toast notification
+            function showToast(message) {
+                toastMessage.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
